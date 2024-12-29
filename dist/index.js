@@ -25683,7 +25683,7 @@ const OPENSTACK_VM_NAME = 'openstack';
 const UBUNTU_UID = '1000';
 const SNAP_DAEMON_GID = '584788';
 const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} --user ${UBUNTU_UID} --group ${SNAP_DAEMON_GID} --`;
-const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin';
+// const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin'
 const OPENSTACK_CLOUDS_YAML_PATH = '~/.config/openstack/clouds.yaml';
 /**
  * The main function for the action.
@@ -25719,7 +25719,7 @@ async function run() {
         }
         const interfaces = interfaceOutput.stdout.split(/(\s+)/);
         if (interfaces.length < 1) {
-            core.error(`LXC failed to allocate interfaces, ${interfaces}`);
+            core.error(`LXC failed to allocate interfaces, ${interfaces.join(',')}`);
             core.setFailed('Failed to fetch lxc network interfaces.');
             return;
         }
