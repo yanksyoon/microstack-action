@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as os from 'os'
 
 enum INPUT_OPTIONS {
   FLAVOR = 'flavor',
@@ -34,13 +35,16 @@ export async function run(): Promise<void> {
     const disk: string = core.getInput(INPUT_OPTIONS.DISK) || DEFAULT_SIZE_DISK
 
     // Setup OpenStack VM
-    core.info('Initializing LXD')
-    await exec.exec('sudo lxd init', ['--auto'])
+    core.startGroup('Initialize LXD')
+    const user = os.userInfo().username
     await exec.exec('sudo lxd waitready')
-    await exec.exec('lxc list')
-    core.info('Launching VM')
+    await exec.exec('sudo lxd init --auto')
+    await exec.exec('sudo chmod a+wr /var/snap/lxd/common/lxd/unix.socket')
+    await exec.exec('lxc network set lxdbr0 ipv6.address none')
+    await exec.exec(`sudo usermod -a -G lxd ${user}`)
+    core.endGroup()
     await exec.exec(
-      `bash -c "lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug"`
+      `lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug`
     )
     core.info('Installing OpenStack (Sunbeam) on VM')
     await exec.exec(

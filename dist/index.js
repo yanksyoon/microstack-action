@@ -25668,6 +25668,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const exec = __importStar(__nccwpck_require__(5236));
+const os = __importStar(__nccwpck_require__(857));
 var INPUT_OPTIONS;
 (function (INPUT_OPTIONS) {
     INPUT_OPTIONS["FLAVOR"] = "flavor";
@@ -25697,12 +25698,15 @@ async function run() {
         const mem = core.getInput(INPUT_OPTIONS.MEMORY) || DEFAULT_SIZE_MEM;
         const disk = core.getInput(INPUT_OPTIONS.DISK) || DEFAULT_SIZE_DISK;
         // Setup OpenStack VM
-        core.info('Initializing LXD');
-        await exec.exec('sudo lxd init', ['--auto']);
+        core.startGroup('Initialize LXD');
+        const user = os.userInfo().username;
         await exec.exec('sudo lxd waitready');
-        await exec.exec('lxc list');
-        core.info('Launching VM');
-        await exec.exec(`bash -c "lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug"`);
+        await exec.exec('sudo lxd init --auto');
+        await exec.exec('sudo chmod a+wr /var/snap/lxd/common/lxd/unix.socket');
+        await exec.exec('lxc network set lxdbr0 ipv6.address none');
+        await exec.exec(`sudo usermod -a -G lxd ${user}`);
+        core.endGroup();
+        await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug`);
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');
