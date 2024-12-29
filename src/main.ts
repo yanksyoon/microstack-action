@@ -39,7 +39,7 @@ export async function run(): Promise<void> {
     await exec.exec('lxc list')
     core.info('Launching VM')
     await exec.exec(
-      `lxc --debug launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem}`
+      `lxc --debug launch ubuntu:${flavor} ${OPENSTACK_VM_NAME}` //  --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem}
     )
     core.info('Installing OpenStack (Sunbeam) on VM')
     await exec.exec(
