@@ -36,6 +36,7 @@ export async function run(): Promise<void> {
     // Setup OpenStack VM
     core.info('Initializing LXD')
     await exec.exec('sudo lxd init', ['--auto'])
+    await exec.exec("lxc list")
     core.info('Launching VM')
     await exec.exec(`lxc --debug launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} \
       --vm \
