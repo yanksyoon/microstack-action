@@ -25696,21 +25696,28 @@ async function run() {
         const mem = core.getInput(INPUT_OPTIONS.MEMORY) || DEFAULT_SIZE_MEM;
         const disk = core.getInput(INPUT_OPTIONS.DISK) || DEFAULT_SIZE_DISK;
         // Setup OpenStack VM
+        core.info('Initializing LXD');
         await exec.exec('sudo lxd init', ['--auto']);
+        core.info('Launching VM');
         await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} \
       --vm \
       -d root,size=${disk} \
       -c limits.cpu=${cores} \
       -c limits.memory=${mem}`);
+        core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
+        core.info('Preparing VM (Sunbeam)');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam prepare-node-script | bash -x`);
+        core.info('Bootstrapping cluster (Sunbeam)');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam cluster bootstrap --accept-defaults`);
+        core.info('Fetching admin credentials (Sunbeam)');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam cloud-config -a > ${OPENSTACK_CLOUDS_YAML_PATH}`);
         // Set up host to route requests to OpenStack
         // example output:
         // "10.248.96.56 (enp5s0)
         // 10.20.20.1 (br-ex)
         // 10.1.0.114 (cilium_host)"
+        core.info('Setting up host IP routing');
         const interfaceOutput = await exec.getExecOutput('lxc list --columns=4 --format=csv');
         if (interfaceOutput.exitCode !== 0) {
             core.error(`lxc list command failed with return code: ${interfaceOutput.exitCode}`);
