@@ -25700,7 +25700,7 @@ async function run() {
         core.info('Initializing LXD');
         await exec.exec('sudo lxd init', ['--auto']);
         core.info('Launching VM');
-        await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} \
+        await exec.exec(`lxc --debug launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} \
       --vm \
       -d root,size=${disk} \
       -c limits.cpu=${cores} \
