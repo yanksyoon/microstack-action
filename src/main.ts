@@ -31,6 +31,8 @@ export async function run(): Promise<void> {
       core.getInput(INPUT_OPTIONS.CORES) || DEFAULT_NUM_CORES
     const mem: string = core.getInput(INPUT_OPTIONS.MEMORY) || DEFAULT_SIZE_MEM
     const disk: string = core.getInput(INPUT_OPTIONS.DISK) || DEFAULT_SIZE_DISK
+
+    // Setup OpenStack VM
     await exec.exec('sudo lxd init', ['--auto'])
     await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} \
       --vm \
@@ -49,6 +51,34 @@ export async function run(): Promise<void> {
     await exec.exec(
       `${EXEC_COMMAND_UBUNTU_USER} sunbeam cloud-config -a > ${OPENSTACK_CLOUDS_YAML_PATH}`
     )
+
+    // Set up host to route requests to OpenStack
+    // example output:
+    // "10.248.96.56 (enp5s0)
+    // 10.20.20.1 (br-ex)
+    // 10.1.0.114 (cilium_host)"
+    const interfaceOutput = await exec.getExecOutput(
+      'lxc list --columns=4 --format=csv'
+    )
+    if (interfaceOutput.exitCode !== 0) {
+      core.error(
+        `lxc list command failed with return code: ${interfaceOutput.exitCode}`
+      )
+      core.setFailed(interfaceOutput.stderr)
+      return
+    }
+    const interfaces = interfaceOutput.stdout.split(/(\s+)/)
+    if (interfaces.length < 1) {
+      core.error(`LXC failed to allocate interfaces, ${interfaces}`)
+      core.setFailed('Failed to fetch lxc network interfaces.')
+      return
+    }
+    const gatewayIP = interfaces[0]
+    // TODO: fetch sunbeam IP from cloud-config.yaml
+    // $ sudo k8s get load-balancer.cidrs
+    // [172.16.1.201-172.16.1.240]
+    const sumbeamIP = '172.16.1.192/26'
+    await exec.exec(`sudo ip route add ${sumbeamIP} via ${gatewayIP}`)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
