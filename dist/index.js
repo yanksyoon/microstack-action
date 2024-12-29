@@ -25681,8 +25681,9 @@ const DEFAULT_SIZE_MEM = '32GiB';
 const DEFAULT_SIZE_DISK = '50GB';
 const OPENSTACK_VM_NAME = 'openstack';
 const UBUNTU_UID = '1000';
-const SNAP_DAEMON_GID = '584788';
-const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} --user ${UBUNTU_UID} --group ${SNAP_DAEMON_GID} --`;
+// const SNAP_DAEMON_GID = '584788'
+// Use sudo -i -u 1000 due to: https://bugs.launchpad.net/snapd/+bug/2075560
+const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} -- sudo -i -u ${UBUNTU_UID}`;
 // const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin'
 const OPENSTACK_CLOUDS_YAML_PATH = '~/.config/openstack/clouds.yaml';
 /**
@@ -25707,8 +25708,9 @@ async function run() {
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');
-        await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam prepare-node-script | bash -x`);
+        await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} bash -c "sunbeam prepare-node-script | bash -x"`);
         core.info('Bootstrapping cluster (Sunbeam)');
+        // lxc exec openstack -- sudo -i -u ubuntu sunbeam cluster bootstrap --accept-defaults
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam cluster bootstrap --accept-defaults`);
         core.info('Fetching admin credentials (Sunbeam)');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam cloud-config -a > ${OPENSTACK_CLOUDS_YAML_PATH}`);
