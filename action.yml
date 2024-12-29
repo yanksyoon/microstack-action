@@ -9,15 +9,27 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
+  flavor:
+    description: 'The Microstack LXC Ubuntu flavor, e.g. 24.04'
+    required: false
+    default: '24.04'
+  cores:
+    description: 'Amount of CPU cores to allocate to MicroStack LXC VM'
+    required: false
+    default: '6'
+  memory:
+    description: 'Amount of memory to allocate to MicroStack LXC VM'
+    required: false
+    default: '32GiB'
+  disk:
+    description: 'Amount of memory to allocate to MicroStack LXC VM'
+    required: false
+    default: '50GiB'
 
 # Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+# outputs:
+#   time:
+#     description: 'Your output description here'
 
 runs:
   using: node20
