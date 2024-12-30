@@ -25706,7 +25706,9 @@ async function run() {
         await exec.exec('lxc network set lxdbr0 ipv6.address none');
         await exec.exec(`sudo usermod -a -G lxd ${user}`);
         core.endGroup();
-        await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug`);
+        await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug`, [], {
+            input: Buffer.from('')
+        });
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');
