@@ -72,7 +72,9 @@ export async function run(): Promise<void> {
       async () => {
         const idCommandRetCode = await exec.exec('id ubuntu')
         const getEntRetCode = await exec.exec('getent passwd ubuntu')
-        const grepRetCode = await exec.exec("grep '^ubuntu:' /etc/passwd")
+        const grepRetCode = await exec.exec("grep '^ubuntu:' /etc/passwd", [], {
+          ignoreReturnCode: true
+        })
         return (
           idCommandRetCode === 0 && getEntRetCode === 0 && grepRetCode === 0
         )
