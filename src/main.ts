@@ -82,14 +82,19 @@ export async function run(): Promise<void> {
     // wait for 5 seconds for Ubuntu user to be properly propagated
     // otherwise the error "sudo: unknown user 1000" occurs
     await wait(1000 * 5)
-    // wait for snapd service to come online, otherwise
+    // wait for snapd service to come online and be seeded, otherwise
     // "dial unix /run/snapd.socket: connect: no such file or directory" error occurs.
     await waitFor(
       async () => {
-        const snapCommandRetCode = await exec.exec('sudo snap', ['--help'], {
-          ignoreReturnCode: true
-        })
-        return snapCommandRetCode === 0
+        // lxc exec u1 -- sudo -i -u ubuntu sudo systemctl status snapd.seeded.service
+        const snapSeededReturn = await exec.getExecOutput(
+          'sudo systemctl status snapd.seeded.service',
+          [],
+          {
+            ignoreReturnCode: true
+          }
+        )
+        return snapSeededReturn.stdout.includes('active (exited)')
       },
       1000 * 60 * 5,
       1000 * 10
