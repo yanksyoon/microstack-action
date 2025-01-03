@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as yaml from 'js-yaml'
 import * as os from 'os'
-import { waitFor } from './wait'
+import { wait, waitFor } from './wait'
 
 enum INPUT_OPTIONS {
   FLAVOR = 'flavor',
@@ -76,6 +76,9 @@ export async function run(): Promise<void> {
       1000 * 60 * 5,
       1000 * 5
     )
+    // wait for 5 seconds for Ubuntu user to be properly propagated
+    // otherwise the error "sudo: unknown user 1000" occurs
+    wait(1000 * 5)
 
     core.info('Installing OpenStack (Sunbeam) on VM')
     await exec.exec(
