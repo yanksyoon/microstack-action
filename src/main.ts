@@ -131,8 +131,7 @@ export async function run(): Promise<void> {
       path.format(OPENSTACK_CLOUDS_YAML_PATH),
       adminCloudConfigOutput.stdout,
       {
-        encoding: 'utf-8',
-        mode: 'a+'
+        encoding: 'utf-8'
       }
     )
 
