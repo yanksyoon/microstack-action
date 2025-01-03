@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as os from 'os'
+import { waitFor } from './wait'
 
 enum INPUT_OPTIONS {
   FLAVOR = 'flavor',
@@ -46,10 +47,17 @@ export async function run(): Promise<void> {
     await exec.exec(
       `lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug`,
       [],
+      // hours wasted: 8
       {
         input: Buffer.from('')
       }
     )
+    // TODO: wait for VM status to be running (LXD agent)
+    await waitFor(async () => {
+      const lxcInfo = await exec.getExecOutput(`lxc info ${OPENSTACK_VM_NAME}`)
+      return lxcInfo.stdout.includes('RUNNING')
+    }, 1000 * 30)
+
     core.info('Installing OpenStack (Sunbeam) on VM')
     await exec.exec(
       `${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`

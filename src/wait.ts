@@ -12,3 +12,20 @@ export async function wait(milliseconds: number): Promise<string> {
     setTimeout(() => resolve('done!'), milliseconds)
   })
 }
+
+export async function waitFor(
+  condition: () => Promise<boolean>,
+  timeoutMs: number
+) {
+  const start = Date.now()
+  while (true) {
+    const result = await condition()
+    if (result) return true
+    // Check for timeout
+    if (Date.now() - start > timeoutMs) {
+      throw new Error('Timeout exceeded while waiting for condition to be true')
+    }
+    // Wait a bit before checking again to avoid busy waiting
+    await new Promise(resolve => setTimeout(resolve, 50)) // Wait 50ms
+  }
+}

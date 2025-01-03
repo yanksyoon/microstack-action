@@ -25669,6 +25669,7 @@ exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const exec = __importStar(__nccwpck_require__(5236));
 const os = __importStar(__nccwpck_require__(857));
+const wait_1 = __nccwpck_require__(910);
 var INPUT_OPTIONS;
 (function (INPUT_OPTIONS) {
     INPUT_OPTIONS["FLAVOR"] = "flavor";
@@ -25706,9 +25707,16 @@ async function run() {
         await exec.exec('lxc network set lxdbr0 ipv6.address none');
         await exec.exec(`sudo usermod -a -G lxd ${user}`);
         core.endGroup();
-        await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug`, [], {
+        await exec.exec(`lxc launch ubuntu:${flavor} ${OPENSTACK_VM_NAME} --vm -d root,size=${disk} -c limits.cpu=${cores} -c limits.memory=${mem} --debug`, [], 
+        // hours wasted: 8
+        {
             input: Buffer.from('')
         });
+        // TODO: wait for VM status to be running (LXD agent)
+        await (0, wait_1.waitFor)(async () => {
+            const lxcInfo = await exec.getExecOutput(`lxc info ${OPENSTACK_VM_NAME}`);
+            return lxcInfo.stdout.includes('RUNNING');
+        }, 1000 * 30);
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');
@@ -25747,6 +25755,45 @@ async function run() {
         // Fail the workflow run if an error occurs
         if (error instanceof Error)
             core.setFailed(error.message);
+    }
+}
+
+
+/***/ }),
+
+/***/ 910:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.wait = wait;
+exports.waitFor = waitFor;
+/**
+ * Wait for a number of milliseconds.
+ * @param milliseconds The number of milliseconds to wait.
+ * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
+ */
+async function wait(milliseconds) {
+    return new Promise(resolve => {
+        if (isNaN(milliseconds)) {
+            throw new Error('milliseconds not a number');
+        }
+        setTimeout(() => resolve('done!'), milliseconds);
+    });
+}
+async function waitFor(condition, timeoutMs) {
+    const start = Date.now();
+    while (true) {
+        const result = await condition();
+        if (result)
+            return true;
+        // Check for timeout
+        if (Date.now() - start > timeoutMs) {
+            throw new Error('Timeout exceeded while waiting for condition to be true');
+        }
+        // Wait a bit before checking again to avoid busy waiting
+        await new Promise(resolve => setTimeout(resolve, 50)); // Wait 50ms
     }
 }
 
