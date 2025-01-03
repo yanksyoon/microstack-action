@@ -29799,7 +29799,7 @@ const UBUNTU_USER = 'ubuntu';
 // Use sudo -i -u 1000 due to: https://bugs.launchpad.net/snapd/+bug/2075560, otherwise
 // "/system.slice/lxd-agent.service is not a snap cgroup" error will occur.
 const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} -- sudo -i -u ${UBUNTU_USER}`;
-// const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin'
+const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin';
 const OPENSTACK_CLOUDS_YAML_PATH = path.parse('~/.config/openstack/clouds.yaml');
 /**
  * The main function for the action.
@@ -29892,6 +29892,10 @@ async function run() {
         // [172.16.1.201-172.16.1.240]
         const sumbeamIP = '172.16.1.192/26';
         await exec.exec(`sudo ip route add ${sumbeamIP} via ${gatewayIP}`);
+        // test with openstack cli
+        await exec.exec('sudo apt install python3-pip');
+        await exec.exec('pip3 install python-openstackclient');
+        await exec.exec(`openstack --os-cloud ${SUNBEAM_ADMIN_CLOUD_NAME} server list`);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
