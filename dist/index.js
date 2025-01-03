@@ -29826,8 +29826,7 @@ async function run() {
             const lxcInfo = await exec.getExecOutput(`lxc info ${OPENSTACK_VM_NAME}`);
             const lxcStatus = yaml.load(lxcInfo.stdout);
             const processes = lxcStatus['Resources']['Processes'];
-            core.info(`LXC VM STATUS: ${processes}, ${processes === '-1'} ${typeof processes} ${processes === -1}`);
-            return lxcStatus['Resources']['Processes'] !== '-1';
+            return processes !== -1;
         }, 1000 * 30);
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
