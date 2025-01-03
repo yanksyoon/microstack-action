@@ -19,8 +19,9 @@ const OPENSTACK_VM_NAME = 'openstack'
 
 const UBUNTU_UID = '1000'
 // const SNAP_DAEMON_GID = '584788'
-// Use sudo -i -u 1000 due to: https://bugs.launchpad.net/snapd/+bug/2075560
-const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} --user ${UBUNTU_UID} -- `
+// Use sudo -i -u 1000 due to: https://bugs.launchpad.net/snapd/+bug/2075560, otherwise
+// "/system.slice/lxd-agent.service is not a snap cgroup" error will occur.
+const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} -- sudo -i -u ${UBUNTU_UID}`
 // const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin'
 const OPENSTACK_CLOUDS_YAML_PATH = '~/.config/openstack/clouds.yaml'
 
