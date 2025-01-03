@@ -67,7 +67,7 @@ export async function run(): Promise<void> {
         return processes !== -1
       },
       1000 * 60 * 5,
-      1000 * 5
+      1000 * 10
     )
     // wait for Ubuntu user to be setup
     await waitFor(
@@ -77,11 +77,23 @@ export async function run(): Promise<void> {
         return idCommandRetCode === 0 && getEntRetCode === 0
       },
       1000 * 60 * 5,
-      1000 * 5
+      1000 * 10
     )
     // wait for 5 seconds for Ubuntu user to be properly propagated
     // otherwise the error "sudo: unknown user 1000" occurs
     await wait(1000 * 5)
+    // wait for snapd service to come online, otherwise
+    // "dial unix /run/snapd.socket: connect: no such file or directory" error occurs.
+    await waitFor(
+      async () => {
+        const snapCommandRetCode = await exec.exec('sudo snap', ['--help'], {
+          ignoreReturnCode: true
+        })
+        return snapCommandRetCode === 0
+      },
+      1000 * 60 * 5,
+      1000 * 10
+    )
 
     core.info('Installing OpenStack (Sunbeam) on VM')
     await exec.exec(

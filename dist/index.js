@@ -29829,16 +29829,24 @@ async function run() {
             const lxcStatus = yaml.load(lxcInfo.stdout);
             const processes = lxcStatus['Resources']['Processes'];
             return processes !== -1;
-        }, 1000 * 60 * 5, 1000 * 5);
+        }, 1000 * 60 * 5, 1000 * 10);
         // wait for Ubuntu user to be setup
         await (0, wait_1.waitFor)(async () => {
             const idCommandRetCode = await exec.exec('id ubuntu');
             const getEntRetCode = await exec.exec('getent passwd ubuntu');
             return idCommandRetCode === 0 && getEntRetCode === 0;
-        }, 1000 * 60 * 5, 1000 * 5);
+        }, 1000 * 60 * 5, 1000 * 10);
         // wait for 5 seconds for Ubuntu user to be properly propagated
         // otherwise the error "sudo: unknown user 1000" occurs
         await (0, wait_1.wait)(1000 * 5);
+        // wait for snapd service to come online, otherwise
+        // "dial unix /run/snapd.socket: connect: no such file or directory" error occurs.
+        await (0, wait_1.waitFor)(async () => {
+            const snapCommandRetCode = await exec.exec('sudo snap', ['--help'], {
+                ignoreReturnCode: true
+            });
+            return snapCommandRetCode === 0;
+        }, 1000 * 60 * 5, 1000 * 10);
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');
