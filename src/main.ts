@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import * as os from 'os'
 import { wait, waitFor } from './wait'
@@ -114,8 +115,22 @@ export async function run(): Promise<void> {
       `${EXEC_COMMAND_UBUNTU_USER} sunbeam cluster bootstrap --accept-defaults`
     )
     core.info('Fetching admin credentials (Sunbeam)')
-    await exec.exec(
-      `${EXEC_COMMAND_UBUNTU_USER} sunbeam cloud-config -a > ${OPENSTACK_CLOUDS_YAML_PATH}`
+    const adminCloudConfigOutput = await exec.getExecOutput(
+      `${EXEC_COMMAND_UBUNTU_USER} sunbeam cloud-config -a`
+    )
+    if (adminCloudConfigOutput.exitCode !== 0) {
+      core.error(
+        `sunbeam cloud config admin credentials failed with return code: ${adminCloudConfigOutput.exitCode}`
+      )
+      core.setFailed(adminCloudConfigOutput.stderr)
+      return
+    }
+    fs.writeFileSync(
+      OPENSTACK_CLOUDS_YAML_PATH,
+      adminCloudConfigOutput.stdout,
+      {
+        encoding: 'utf-8'
+      }
     )
 
     // Set up host to route requests to OpenStack

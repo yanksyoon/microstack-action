@@ -29776,6 +29776,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const exec = __importStar(__nccwpck_require__(5236));
+const fs = __importStar(__nccwpck_require__(9896));
 const yaml = __importStar(__nccwpck_require__(4281));
 const os = __importStar(__nccwpck_require__(857));
 const wait_1 = __nccwpck_require__(910);
@@ -29856,7 +29857,15 @@ async function run() {
         // lxc exec openstack -- sudo -i -u ubuntu sunbeam cluster bootstrap --accept-defaults
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam cluster bootstrap --accept-defaults`);
         core.info('Fetching admin credentials (Sunbeam)');
-        await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sunbeam cloud-config -a > ${OPENSTACK_CLOUDS_YAML_PATH}`);
+        const adminCloudConfigOutput = await exec.getExecOutput(`${EXEC_COMMAND_UBUNTU_USER} sunbeam cloud-config -a`);
+        if (adminCloudConfigOutput.exitCode !== 0) {
+            core.error(`sunbeam cloud config admin credentials failed with return code: ${adminCloudConfigOutput.exitCode}`);
+            core.setFailed(adminCloudConfigOutput.stderr);
+            return;
+        }
+        fs.writeFileSync(OPENSTACK_CLOUDS_YAML_PATH, adminCloudConfigOutput.stdout, {
+            encoding: 'utf-8'
+        });
         // Set up host to route requests to OpenStack
         // example output:
         // "10.248.96.56 (enp5s0)
