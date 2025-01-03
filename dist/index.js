@@ -29831,11 +29831,13 @@ async function run() {
         // wait for Ubuntu user to be setup
         await (0, wait_1.waitFor)(async () => {
             const idCommandRetCode = await exec.exec('id ubuntu');
-            return idCommandRetCode === 0;
+            const getEntRetCode = await exec.exec('getent passwd ubuntu');
+            const grepRetCode = await exec.exec("grep '^ubuntu:' /etc/passwd");
+            return (idCommandRetCode === 0 && getEntRetCode === 0 && grepRetCode === 0);
         }, 1000 * 60 * 5, 1000 * 5);
         // wait for 5 seconds for Ubuntu user to be properly propagated
         // otherwise the error "sudo: unknown user 1000" occurs
-        (0, wait_1.wait)(1000 * 5);
+        await (0, wait_1.wait)(1000 * 5);
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');

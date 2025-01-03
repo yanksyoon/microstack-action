@@ -71,14 +71,18 @@ export async function run(): Promise<void> {
     await waitFor(
       async () => {
         const idCommandRetCode = await exec.exec('id ubuntu')
-        return idCommandRetCode === 0
+        const getEntRetCode = await exec.exec('getent passwd ubuntu')
+        const grepRetCode = await exec.exec("grep '^ubuntu:' /etc/passwd")
+        return (
+          idCommandRetCode === 0 && getEntRetCode === 0 && grepRetCode === 0
+        )
       },
       1000 * 60 * 5,
       1000 * 5
     )
     // wait for 5 seconds for Ubuntu user to be properly propagated
     // otherwise the error "sudo: unknown user 1000" occurs
-    wait(1000 * 5)
+    await wait(1000 * 5)
 
     core.info('Installing OpenStack (Sunbeam) on VM')
     await exec.exec(
