@@ -29821,13 +29821,18 @@ async function run() {
         {
             input: Buffer.from('')
         });
-        // TODO: wait for VM status to be running (LXD agent)
+        // wait for LXD agent to be running
         await (0, wait_1.waitFor)(async () => {
             const lxcInfo = await exec.getExecOutput(`lxc info ${OPENSTACK_VM_NAME}`);
             const lxcStatus = yaml.load(lxcInfo.stdout);
             const processes = lxcStatus['Resources']['Processes'];
             return processes !== -1;
-        }, 1000 * 60 * 5);
+        }, 1000 * 60 * 5, 1000 * 5);
+        // wait for Ubuntu user to be setup
+        await (0, wait_1.waitFor)(async () => {
+            const idCommandRetCode = await exec.exec('id ubuntu');
+            return idCommandRetCode === 0;
+        }, 1000 * 60 * 5, 1000 * 5);
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');

@@ -53,7 +53,8 @@ export async function run(): Promise<void> {
         input: Buffer.from('')
       }
     )
-    // TODO: wait for VM status to be running (LXD agent)
+
+    // wait for LXD agent to be running
     await waitFor(
       async () => {
         const lxcInfo = await exec.getExecOutput(
@@ -63,7 +64,17 @@ export async function run(): Promise<void> {
         const processes = lxcStatus['Resources']['Processes']
         return processes !== -1
       },
-      1000 * 60 * 5
+      1000 * 60 * 5,
+      1000 * 5
+    )
+    // wait for Ubuntu user to be setup
+    await waitFor(
+      async () => {
+        const idCommandRetCode = await exec.exec('id ubuntu')
+        return idCommandRetCode === 0
+      },
+      1000 * 60 * 5,
+      1000 * 5
     )
 
     core.info('Installing OpenStack (Sunbeam) on VM')
