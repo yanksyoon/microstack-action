@@ -57,8 +57,9 @@ export async function run(): Promise<void> {
     await waitFor(async () => {
       const lxcInfo = await exec.getExecOutput(`lxc info ${OPENSTACK_VM_NAME}`)
       const lxcStatus = yaml.load(lxcInfo.stdout) as any
+      const processes = lxcStatus['Resources']['Processes']
       core.info(
-        `LXC VM STATUS: ${lxcStatus['Resources']['Processes']}, ${lxcStatus['Resources']['Processes'] === '-1'}`
+        `LXC VM STATUS: ${processes}, ${processes === '-1'} ${typeof processes} ${processes === -1}`
       )
       return lxcStatus['Resources']['Processes'] !== '-1'
     }, 1000 * 30)
