@@ -3,6 +3,7 @@ import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import * as os from 'os'
+import * as path from 'path'
 import { wait, waitFor } from './wait'
 
 enum INPUT_OPTIONS {
@@ -25,7 +26,7 @@ const UBUNTU_USER = 'ubuntu'
 // "/system.slice/lxd-agent.service is not a snap cgroup" error will occur.
 const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} -- sudo -i -u ${UBUNTU_USER}`
 // const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin'
-const OPENSTACK_CLOUDS_YAML_PATH = '~/.config/openstack/clouds.yaml'
+const OPENSTACK_CLOUDS_YAML_PATH = path.parse('~/.config/openstack/clouds.yaml')
 
 /**
  * The main function for the action.
@@ -125,11 +126,13 @@ export async function run(): Promise<void> {
       core.setFailed(adminCloudConfigOutput.stderr)
       return
     }
+    fs.mkdirSync(OPENSTACK_CLOUDS_YAML_PATH.dir, { recursive: true })
     fs.writeFileSync(
-      OPENSTACK_CLOUDS_YAML_PATH,
+      path.format(OPENSTACK_CLOUDS_YAML_PATH),
       adminCloudConfigOutput.stdout,
       {
-        encoding: 'utf-8'
+        encoding: 'utf-8',
+        mode: 'a+'
       }
     )
 

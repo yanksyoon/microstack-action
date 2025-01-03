@@ -29779,6 +29779,7 @@ const exec = __importStar(__nccwpck_require__(5236));
 const fs = __importStar(__nccwpck_require__(9896));
 const yaml = __importStar(__nccwpck_require__(4281));
 const os = __importStar(__nccwpck_require__(857));
+const path = __importStar(__nccwpck_require__(6928));
 const wait_1 = __nccwpck_require__(910);
 var INPUT_OPTIONS;
 (function (INPUT_OPTIONS) {
@@ -29799,7 +29800,7 @@ const UBUNTU_USER = 'ubuntu';
 // "/system.slice/lxd-agent.service is not a snap cgroup" error will occur.
 const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} -- sudo -i -u ${UBUNTU_USER}`;
 // const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin'
-const OPENSTACK_CLOUDS_YAML_PATH = '~/.config/openstack/clouds.yaml';
+const OPENSTACK_CLOUDS_YAML_PATH = path.parse('~/.config/openstack/clouds.yaml');
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -29863,8 +29864,10 @@ async function run() {
             core.setFailed(adminCloudConfigOutput.stderr);
             return;
         }
-        fs.writeFileSync(OPENSTACK_CLOUDS_YAML_PATH, adminCloudConfigOutput.stdout, {
-            encoding: 'utf-8'
+        fs.mkdirSync(OPENSTACK_CLOUDS_YAML_PATH.dir, { recursive: true });
+        fs.writeFileSync(path.format(OPENSTACK_CLOUDS_YAML_PATH), adminCloudConfigOutput.stdout, {
+            encoding: 'utf-8',
+            mode: 'a+'
         });
         // Set up host to route requests to OpenStack
         // example output:
