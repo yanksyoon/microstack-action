@@ -167,6 +167,9 @@ export async function run(): Promise<void> {
     // test with openstack cli
     await exec.exec('sudo apt install python3-pip')
     await exec.exec('pip3 install python-openstackclient')
+    await exec.exec('whoami')
+    await exec.exec('echo $HOME')
+    await exec.exec('cd ~ && pwd')
     await exec.exec(
       `openstack --os-cloud ${SUNBEAM_ADMIN_CLOUD_NAME} server list`
     )
