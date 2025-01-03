@@ -29827,7 +29827,7 @@ async function run() {
             const lxcStatus = yaml.load(lxcInfo.stdout);
             const processes = lxcStatus['Resources']['Processes'];
             return processes !== -1;
-        }, 1000 * 30);
+        }, 1000 * 60 * 5);
         core.info('Installing OpenStack (Sunbeam) on VM');
         await exec.exec(`${EXEC_COMMAND_UBUNTU_USER} sudo snap install openstack --channel 2024.1/beta`);
         core.info('Preparing VM (Sunbeam)');
@@ -29893,7 +29893,7 @@ async function wait(milliseconds) {
         setTimeout(() => resolve('done!'), milliseconds);
     });
 }
-async function waitFor(condition, timeoutMs) {
+async function waitFor(condition, timeoutMs = 30 * 1000, waitMs = 1000) {
     const start = Date.now();
     while (true) {
         const result = await condition();
@@ -29904,7 +29904,7 @@ async function waitFor(condition, timeoutMs) {
             throw new Error('Timeout exceeded while waiting for condition to be true');
         }
         // Wait a bit before checking again to avoid busy waiting
-        await new Promise(resolve => setTimeout(resolve, 50)); // Wait 50ms
+        await new Promise(resolve => setTimeout(resolve, waitMs)); // Wait 1s
     }
 }
 
