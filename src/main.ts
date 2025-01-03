@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as yaml from 'js-yaml'
 import * as os from 'os'
 import { waitFor } from './wait'
 
@@ -55,7 +56,8 @@ export async function run(): Promise<void> {
     // TODO: wait for VM status to be running (LXD agent)
     await waitFor(async () => {
       const lxcInfo = await exec.getExecOutput(`lxc info ${OPENSTACK_VM_NAME}`)
-      return lxcInfo.stdout.includes('RUNNING')
+      const lxcStatus = yaml.load(lxcInfo.stdout) as any
+      return lxcStatus['Resources']['Processes'] !== '-1'
     }, 1000 * 30)
 
     core.info('Installing OpenStack (Sunbeam) on VM')
