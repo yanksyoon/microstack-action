@@ -29832,10 +29832,7 @@ async function run() {
         await (0, wait_1.waitFor)(async () => {
             const idCommandRetCode = await exec.exec('id ubuntu');
             const getEntRetCode = await exec.exec('getent passwd ubuntu');
-            const grepRetCode = await exec.exec("grep '^ubuntu:' /etc/passwd", [], {
-                ignoreReturnCode: true
-            });
-            return (idCommandRetCode === 0 && getEntRetCode === 0 && grepRetCode === 0);
+            return idCommandRetCode === 0 && getEntRetCode === 0;
         }, 1000 * 60 * 5, 1000 * 5);
         // wait for 5 seconds for Ubuntu user to be properly propagated
         // otherwise the error "sudo: unknown user 1000" occurs
