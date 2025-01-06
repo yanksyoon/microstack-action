@@ -131,7 +131,7 @@ export async function run(): Promise<void> {
     fs.writeFileSync(path.format(OPENSTACK_CLOUDS_YAML_PATH), cloudsYaml, {
       encoding: 'utf-8'
     })
-    fs.writeFileSync('.', cloudsYaml, {
+    fs.writeFileSync('clouds.yaml', cloudsYaml, {
       encoding: 'utf-8'
     })
 

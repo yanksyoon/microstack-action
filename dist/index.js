@@ -29869,7 +29869,7 @@ async function run() {
         fs.writeFileSync(path.format(OPENSTACK_CLOUDS_YAML_PATH), cloudsYaml, {
             encoding: 'utf-8'
         });
-        fs.writeFileSync('.', cloudsYaml, {
+        fs.writeFileSync('clouds.yaml', cloudsYaml, {
             encoding: 'utf-8'
         });
         // Set up host to route requests to OpenStack
