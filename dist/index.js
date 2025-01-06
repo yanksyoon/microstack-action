@@ -29865,7 +29865,11 @@ async function run() {
             return;
         }
         fs.mkdirSync(OPENSTACK_CLOUDS_YAML_PATH.dir, { recursive: true });
-        fs.writeFileSync(path.format(OPENSTACK_CLOUDS_YAML_PATH), adminCloudConfigOutput.stdout, {
+        const cloudsYaml = adminCloudConfigOutput.stdout;
+        fs.writeFileSync(path.format(OPENSTACK_CLOUDS_YAML_PATH), cloudsYaml, {
+            encoding: 'utf-8'
+        });
+        fs.writeFileSync('.', cloudsYaml, {
             encoding: 'utf-8'
         });
         // Set up host to route requests to OpenStack
