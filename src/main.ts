@@ -141,23 +141,47 @@ export async function run(): Promise<void> {
     // 10.20.20.1 (br-ex)
     // 10.1.0.114 (cilium_host)"
     core.info('Setting up host IP routing')
-    const interfaceOutput = await exec.getExecOutput(
-      'lxc list --columns=4 --format=csv'
-    )
-    if (interfaceOutput.exitCode !== 0) {
+    const lxcListOutput = await exec.getExecOutput('lxc list --format=yaml')
+    if (lxcListOutput.exitCode !== 0) {
       core.error(
-        `lxc list command failed with return code: ${interfaceOutput.exitCode}`
+        `lxc list command failed with return code: ${lxcListOutput.exitCode}`
       )
-      core.setFailed(interfaceOutput.stderr)
+      core.setFailed(lxcListOutput.stderr)
       return
     }
-    const interfaces = interfaceOutput.stdout.split(/(\s+)/)
-    if (interfaces.length < 1) {
-      core.error(`LXC failed to allocate interfaces, ${interfaces.join(',')}`)
-      core.setFailed('Failed to fetch lxc network interfaces.')
+    const lxcVmStatus = yaml.load(lxcListOutput.stdout) as [any]
+    const openstackVmStatus = lxcVmStatus.find(
+      vmStatus => vmStatus['name'] === OPENSTACK_VM_NAME
+    )
+    if (!openstackVmStatus) {
+      core.error(`Failed to find OpenStack LXD VM in: ${lxcVmStatus}`)
+      core.setFailed('Failed to find OpenStack LXD VM.')
       return
     }
-    const gatewayIP = interfaces[0]
+    const lxcNetworks: { [key: string]: any } =
+      openstackVmStatus['state']['network']
+    // find eth network interface
+    const ethInterfaceName = Object.keys(lxcNetworks).find(interfaceName =>
+      interfaceName.startsWith('enp')
+    )
+    if (!ethInterfaceName) {
+      core.error(
+        `Unable to find eth interface in LXC VM networks ${lxcNetworks}`
+      )
+      core.setFailed('Unable to find eth interface in LXC VM networks.')
+      return
+    }
+    const lxcEthInterface = lxcNetworks[ethInterfaceName]
+    const lxcVMAddresses: [any] = lxcEthInterface['addresses']
+    const ipv4Address = lxcVMAddresses.find(
+      addressInfo => addressInfo['netmask'] === '24'
+    )
+    if (!ipv4Address) {
+      core.error(`Unable to find ipv4 address ${lxcVMAddresses}`)
+      core.setFailed('Unable to find ipv4 address.')
+      return
+    }
+    const gatewayIP = ipv4Address['address']
     // TODO: fetch sunbeam IP from cloud-config.yaml
     // $ sudo k8s get load-balancer.cidrs
     // [172.16.1.201-172.16.1.240]
