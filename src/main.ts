@@ -196,6 +196,9 @@ export async function run(): Promise<void> {
     await exec.exec(
       `openstack --os-cloud ${SUNBEAM_ADMIN_CLOUD_NAME} server list`
     )
+    await exec.exec(
+      `openstack flavor create --public cpu2-ram8-disk20 --id auto --ram 8 disk 20 --vcpus 2`
+    )
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
