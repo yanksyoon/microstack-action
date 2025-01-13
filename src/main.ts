@@ -26,7 +26,11 @@ const UBUNTU_USER = 'ubuntu'
 // "/system.slice/lxd-agent.service is not a snap cgroup" error will occur.
 const EXEC_COMMAND_UBUNTU_USER = `lxc exec ${OPENSTACK_VM_NAME} -- sudo -i -u ${UBUNTU_USER}`
 const SUNBEAM_ADMIN_CLOUD_NAME = 'sunbeam-admin'
-const OPENSTACK_CLOUDS_YAML_PATH = path.parse('~/.config/openstack/clouds.yaml')
+const OPENSTACK_CLOUDS_YAML_PATH = path.parse(
+  '/home/ubuntu/.config/openstack/clouds.yaml'
+)
+const NOBLE_CLOUD_IMAGE =
+  'https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img'
 
 /**
  * The main function for the action.
@@ -193,11 +197,23 @@ export async function run(): Promise<void> {
     await exec.exec('pip3 install python-openstackclient')
     await exec.exec('whoami')
     await exec.exec('echo $HOME')
+    // testing steps
+    // create flavor
+    // creage image
+    // create network
+    // create subnet
+    // create security group
+    // create ssh key
+    // create instance and test
     await exec.exec(
       `openstack --os-cloud ${SUNBEAM_ADMIN_CLOUD_NAME} server list`
     )
     await exec.exec(
-      `openstack flavor create --public cpu2-ram8-disk20 --id auto --ram 8 disk 20 --vcpus 2`
+      `openstack flavor create --public cpu2-ram8-disk20 --id auto --ram 8 --disk 20 --vcpus 2`
+    )
+    await exec.exec(`wget ${NOBLE_CLOUD_IMAGE}`)
+    await exec.exec(
+      `openstack image create --disk-format qcow2 --public --file=./noble-server-cloudimg-amd64.img --os-cloud=sunbeam-admin noble`
     )
   } catch (error) {
     // Fail the workflow run if an error occurs
